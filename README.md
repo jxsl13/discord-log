@@ -7,7 +7,7 @@ go install github.com/jxsl13/discord-log@latest
 
 # or
 
-go install github.com/jxsl13/discord-log@@main
+go install github.com/jxsl13/discord-log@main
 ```
 
 ## Usage
