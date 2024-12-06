@@ -1,0 +1,4 @@
+discord-log
+.env
+*.env
+__debug_bin*
