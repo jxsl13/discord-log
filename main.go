@@ -112,13 +112,13 @@ func (cli *CLI) RunE(cmd *cobra.Command, args []string) error {
 
 	h := handler.New()
 	h.AddHandler(func(c *gateway.ReadyEvent) {
-		log.Print("connected")
+		log.Print("connected to discord")
 	})
 	h.AddHandler(func(c *gateway.MessageDeleteEvent) {
 		// Grab from the state
 		m, err := s.Message(c.ChannelID, c.ID)
 		if err != nil {
-			cli.LogDelete(ctx, c.ID, c.ChannelID, c.GuildID)
+			return
 		} else {
 			cli.LogMessage(ctx, m, "delete")
 		}
@@ -136,7 +136,7 @@ func (cli *CLI) RunE(cmd *cobra.Command, args []string) error {
 		for _, id := range c.IDs {
 			m, err := s.Message(c.ChannelID, id)
 			if err != nil {
-				cli.LogDelete(ctx, id, c.ChannelID, c.GuildID)
+				continue
 			} else {
 				cli.LogMessage(ctx, m, "delete")
 			}
@@ -156,25 +156,21 @@ func (cli *CLI) RunE(cmd *cobra.Command, args []string) error {
 func (cli *CLI) LogMessage(ctx context.Context, m *discord.Message, action string) {
 	cli.slogger.Log(ctx, slog.LevelInfo,
 		action,
-		slog.String("action", action),
-		slog.Uint64("id", uint64(m.ID)),
-		slog.Uint64("channel", uint64(m.ChannelID)),
-		slog.Uint64("guild", uint64(m.GuildID)),
-		slog.Uint64("type", uint64(m.Type)),
-		slog.Int64("flags", int64(m.Flags)),
-		slog.Time("timestamp", m.Timestamp.Time()),
-		slog.Time("edited", m.EditedTimestamp.Time()),
-		slog.String("author", m.Author.Username),
-		slog.String("content", m.Content),
-	)
-}
-
-func (cli *CLI) LogDelete(ctx context.Context, messageID discord.MessageID, channelID discord.ChannelID, guildID discord.GuildID) {
-	cli.slogger.Log(ctx, slog.LevelInfo,
-		"delete",
-		slog.String("action", "delete"),
-		slog.Uint64("id", uint64(messageID)),
-		slog.Uint64("channel", uint64(channelID)),
-		slog.Uint64("guild", uint64(guildID)),
+		slog.Group(
+			"discord_message",
+			slog.Bool("tts", m.TTS),
+			slog.Bool("pinned", m.Pinned),
+			slog.Bool("mention_everyone", m.MentionEveryone),
+			slog.String("action", action),
+			slog.Uint64("message_id", uint64(m.ID)),
+			slog.Uint64("channel_id", uint64(m.ChannelID)),
+			slog.Uint64("guild_id", uint64(m.GuildID)),
+			slog.Uint64("type", uint64(m.Type)),
+			slog.Int64("flags", int64(m.Flags)),
+			slog.Time("timestamp", m.Timestamp.Time()),
+			slog.Time("edited", m.EditedTimestamp.Time()),
+			slog.String("author", m.Author.Username),
+			slog.String("content", m.Content),
+		),
 	)
 }
